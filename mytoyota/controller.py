@@ -7,6 +7,9 @@ import logging
 from typing import Any
 import jwt  # For decoding taok
 from urllib import parse  # For parse query string, can this be done with httpx?
+import base64
+
+basic = base64.b64encode("oneapp:oneapp")
 
 import httpx
 
@@ -123,7 +126,7 @@ class Controller:
 
             # Retrieve tokens
             resp = await client.post(self._access_token_endpoint,
-                                     headers={"authorization": "basic b25lYXBwOm9uZWFwcA=="},  # oneapp:oneapp in base64
+                                     headers={"authorization": f"basic {basic}"},  # oneapp:oneapp in base64
                                      data={"client_id": "oneapp",
                                            "code": authentication_code,
                                            "redirect_uri": "com.toyota.oneapp:/oauth2Callback",
