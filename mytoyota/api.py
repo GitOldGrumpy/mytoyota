@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .const import BASE_URL, BASE_URL_CARS
+from .const import BASE_URL
 from .controller import Controller
 
 
@@ -22,20 +22,14 @@ class Api:
     async def set_vehicle_alias_endpoint(
         self, new_alias: str, vehicle_id: int
     ) -> dict[str, Any] | None:
-        """Set vehicle alias."""
-        return await self.controller.request(
-            method="PUT",
-            base_url=BASE_URL_CARS,
-            endpoint=f"/api/users/{self.uuid}/vehicles/{vehicle_id}",
-            body={"id": vehicle_id, "alias": new_alias},
-        )
+        raise NotImplemented
 
     async def get_vehicles_endpoint(self) -> list[dict[str, Any] | None] | None:
         """Retrieves list of cars you have registered with MyT"""
         return await self.controller.request(
             method="GET",
-            base_url=BASE_URL_CARS,
-            endpoint=f"/vehicle/user/{self.uuid}/vehicles?services=uio&legacy=true",
+            base_url=BASE_URL,
+            endpoint="/v2/vehicle/guid",
         )
 
     async def get_connected_services_endpoint(self, vin: str) -> dict[str, Any] | None:
