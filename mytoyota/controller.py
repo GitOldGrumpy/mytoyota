@@ -8,9 +8,6 @@ from typing import Any
 import jwt  # For decoding taok
 from urllib import parse  # For parse query string, can this be done with httpx?
 import base64
-
-basic = base64.b64encode("oneapp:oneapp")
-
 import httpx
 
 from mytoyota.const import (
@@ -30,11 +27,10 @@ from mytoyota.utils.logs import censor_dict
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
+
 class Controller:
     """Controller class."""
-
-    _token: str | None = None
-    _token_expiration: datetime | None = None
+    BASIC_AUTH_STRING: str = base64.b64encode(b"oneapp:oneapp")
 
     def __init__(
         self,
@@ -45,12 +41,14 @@ class Controller:
         brand: str,
         uuid: str | None = None,
     ) -> None:
-        self._locale = locale
-        self._region = region
-        self._username = username
-        self._password = password
-        self._brand = brand
-        self._uuid = uuid
+        self._locale: str = locale
+        self._region: str = region
+        self._username: str = username
+        self._password: str = password
+        self._brand: str = brand
+        self._uuid: str = uuid
+        self._token: str | None = None
+        self._token_expiration: datetime | None = None
 
     @property
     def _authorize_endpoint(self) -> str:
@@ -126,7 +124,7 @@ class Controller:
 
             # Retrieve tokens
             resp = await client.post(self._access_token_endpoint,
-                                     headers={"authorization": f"basic {basic}"},  # oneapp:oneapp in base64
+                                     headers={"authorization": f"basic {self.BASIC_AUTH_STRING}"},
                                      data={"client_id": "oneapp",
                                            "code": authentication_code,
                                            "redirect_uri": "com.toyota.oneapp:/oauth2Callback",
