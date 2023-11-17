@@ -22,7 +22,7 @@ class Api:
     async def set_vehicle_alias_endpoint(
         self, new_alias: str, vehicle_id: int
     ) -> dict[str, Any] | None:
-        raise NotImplemented
+        raise NotImplemented("Endpoint no longer supported")
 
     async def get_vehicles_endpoint(self) -> list[dict[str, Any] | None] | None:
         """Retrieves list of cars you have registered with MyT"""
@@ -34,30 +34,28 @@ class Api:
 
     async def get_connected_services_endpoint(self, vin: str) -> dict[str, Any] | None:
         """Get information about connected services for the given car."""
-        return await self.controller.request(
-            method="GET",
-            base_url=BASE_URL_CARS,
-            endpoint=f"/vehicle/user/{self.uuid}/vehicle/{vin}?legacy=true&services=fud,connected",
-        )
+        raise NotImplemented("Endpoint no longer supported")
 
     async def get_odometer_endpoint(self, vin: str) -> list[dict[str, Any]] | None:
         """Get information from odometer."""
-        return await self.controller.request(
-            method="GET",
-            base_url=BASE_URL,
-            endpoint=f"/vehicle/{vin}/addtionalInfo",
-        )
+        raise NotImplemented("Endpoint no longer supported")
 
     async def get_parking_endpoint(
         self, vin: str
     ) -> dict[str, Any] | None:  # pragma: no cover
         """Get where you have parked your car."""
-        return await self.controller.request(
+        ret = await self.controller.request(
             method="GET",
             base_url=BASE_URL,
-            endpoint=f"/users/{self.uuid}/vehicle/location",
-            headers={"VIN": vin},
+            endpoint=f"/v1/location",
+            headers={"VIN": vin}
         )
+
+        # If car is in motion you can get an empty response back. This will have no payload.
+        if "status" in ret:
+            return None
+
+        return ret
 
     async def get_vehicle_status_endpoint(self, vin: str) -> dict[str, Any] | None:
         """Get information about the vehicle."""

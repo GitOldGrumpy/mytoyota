@@ -1,7 +1,7 @@
 """Toyota Connected Services Controller """
-#import annotations
+# import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
 from typing import Any
@@ -33,13 +33,13 @@ class Controller:
     BASIC_AUTH_STRING: str = base64.b64encode(b"oneapp:oneapp")
 
     def __init__(
-        self,
-        locale: str,
-        region: str,
-        username: str,
-        password: str,
-        brand: str,
-        uuid: str | None = None,
+            self,
+            locale: str,
+            region: str,
+            username: str,
+            password: str,
+            brand: str,
+            uuid: str | None = None,
     ) -> None:
         self._locale: str = locale
         self._region: str = region
@@ -53,22 +53,22 @@ class Controller:
     @property
     def _authorize_endpoint(self) -> str:
         """Returns auth endpoint."""
-        return SUPPORTED_REGIONS[self._region].get(ACCESS_TOKEN_URL)
+        return SUPPORTED_REGIONS[self._region].get(AUTHORIZE_URL)
 
     @property
     def _access_token_endpoint(self) -> str:
         """Returns auth endpoint."""
-        return SUPPORTED_REGIONS[self._region].get(AUTHORIZE_URL)
+        return SUPPORTED_REGIONS[self._region].get(ACCESS_TOKEN_URL)
 
     @property
     def _authenticate_endpoint(self) -> str:
         """Returns auth endpoint."""
         return SUPPORTED_REGIONS[self._region].get(AUTHENTICATE_URL)
 
-#    @property
-#    def _auth_valid_endpoint(self) -> str:
-#        """Returns token is valid endpoint."""
-#        return SUPPORTED_REGIONS[self._region].get(TOKEN_VALID_URL)
+    #    @property
+    #    def _auth_valid_endpoint(self) -> str:
+    #        """Returns token is valid endpoint."""
+    #        return SUPPORTED_REGIONS[self._region].get(TOKEN_VALID_URL)
 
     @property
     # TODO Dont think this is required outside of the controller anymore.
@@ -82,9 +82,6 @@ class Controller:
 
     async def _update_token(self, retry: bool = True) -> None:
         """Performs login to toyota servers and retrieves token and uuid for the account."""
-
-        # Cannot authenticate with aiohttp (returns 415),
-        # but it works with httpx.
 
         _LOGGER.debug("Authenticate")
         async with httpx.AsyncClient() as client:
@@ -124,7 +121,8 @@ class Controller:
 
             # Retrieve tokens
             resp = await client.post(self._access_token_endpoint,
-                                     headers={"authorization": f"basic {self.BASIC_AUTH_STRING}"},
+                                     headers={"authorization": "basic b25lYXBwOm9uZWFwcA=="},
+                                     # f"basic {self.BASIC_AUTH_STRING}"},
                                      data={"client_id": "oneapp",
                                            "code": authentication_code,
                                            "redirect_uri": "com.toyota.oneapp:/oauth2Callback",
@@ -138,16 +136,16 @@ class Controller:
                 raise ToyotaLoginError("Failed to retrieve required tokens")
 
             access_tokens: dict[str, Any] = resp.json()
-            assert("access_token" in access_tokens and "id_token" in access_tokens)
+            assert ("access_token" in access_tokens and "id_token" in access_tokens)
 
             self._token = access_tokens["access_token"]
             self._uuid = jwt.decode(access_tokens["id_token"],
                                     algorithms=["RS256"],
                                     options={"verify_signature": False},
                                     audience="oneappsdkclient")["uuid"]  # Usefully found in toyota_na
-            self._token_expiration = datetime.now() + access_tokens["expires_in"]
+            self._token_expiration = datetime.now() + timedelta(seconds=access_tokens["expires_in"])
 
-    async def _is_token_valid(self, retry: bool = True) -> bool:
+    def _is_token_valid(self, retry: bool = True) -> bool:
         """Checks if token is valid"""
         if self._token == None:
             return False
@@ -155,13 +153,13 @@ class Controller:
         return self._token_expiration > datetime.now()
 
     async def request(  # pylint: disable=too-many-branches
-        self,
-        method: str,
-        endpoint: str,
-        base_url: str | None = None,
-        body: dict[str, Any] | None = None,
-        params: dict[str, Any] | None = None,
-        headers: dict[str, Any] | None = None,
+            self,
+            method: str,
+            endpoint: str,
+            base_url: str | None = None,
+            body: dict[str, Any] | None = None,
+            params: dict[str, Any] | None = None,
+            headers: dict[str, Any] | None = None,
     ) -> dict[str, Any] | list[Any] | None:
         """Shared request method"""
         if method not in ("GET", "POST", "PUT", "DELETE"):
@@ -209,7 +207,11 @@ class Controller:
                 HTTPStatus.OK,
                 HTTPStatus.ACCEPTED,
             ]:
-                return response.json()
+                ret: dict[str, Any] = response.json()
+                if "payload" in ret:
+                    return ret["payload"]
+
+                return ret
             elif response.status_code == HTTPStatus.NO_CONTENT:
                 # TODO
                 raise ToyotaApiError("NO_CONTENT")
