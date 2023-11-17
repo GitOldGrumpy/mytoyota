@@ -102,12 +102,7 @@ class MyT:
         Returns:
             A list of supported regions. For example: ["europe"]
         """
-        regions = []
-
-        for key, _ in SUPPORTED_REGIONS.items():  # pylint: disable=unused-variable
-            regions.append(key)
-
-        return regions
+        return [key for key in SUPPORTED_REGIONS.keys()]
 
     async def login(self) -> None:
         """Performs first login.
@@ -255,10 +250,10 @@ class MyT:
 
         data = await asyncio.gather(
             *[
-                self.api.get_connected_services_endpoint(vin),
-                self.api.get_odometer_endpoint(vin),
                 self.api.get_vehicle_status_endpoint(vin),
-                self.api.get_vehicle_status_legacy_endpoint(vin),
+                self.api.get_telemetry_endpoint(vin),
+                self.api.get_location_endpoint(vin),
+                self.api.get_vehicle_electric_status_endpoint(vin)
             ]
         )
 

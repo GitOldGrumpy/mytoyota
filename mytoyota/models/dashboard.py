@@ -14,28 +14,22 @@ class Dashboard:
 
     def __init__(
         self,
-        vehicle: Vehicle,
+        telemetry: dict[str, Any],
     ) -> None:
         """Dashboard."""
-        self._vehicle = vehicle
-
-        vehicle_info = vehicle._status_legacy.get("VehicleInfo", {})
-        self._chargeinfo = vehicle_info.get("ChargeInfo", {})
-        self._energy = (
-            vehicle._status.get("energy", [])[0] if "energy" in vehicle._status else {}
-        )
+        self._telemetry = telemetry
 
     @property
     def legacy(self) -> bool:
         """If the car uses the legacy endpoints."""
-        if "Fuel" in self._vehicle.odometer:
-            return True
-        return False
+        return True
 
     @property
     def is_metric(self) -> bool:
         """If the car is reporting data in metric."""
-        return self._vehicle.odometer.get("mileage_unit") == "km"
+        # Annoyingly the data is both in imperial & metric.
+        # I'm english picking imperial
+        return False
 
     @property
     def odometer(self) -> int | None:

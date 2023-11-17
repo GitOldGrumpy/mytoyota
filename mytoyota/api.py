@@ -22,7 +22,8 @@ class Api:
     async def set_vehicle_alias_endpoint(
         self, new_alias: str, vehicle_id: int
     ) -> dict[str, Any] | None:
-        raise NotImplemented("Endpoint no longer supported")
+        # It does seem to support it. Need to find the endpoint.
+        raise NotImplemented("Endpoint not found")
 
     async def get_vehicles_endpoint(self) -> list[dict[str, Any] | None] | None:
         """Retrieves list of cars you have registered with MyT"""
@@ -40,7 +41,7 @@ class Api:
         """Get information from odometer."""
         raise NotImplemented("Endpoint no longer supported")
 
-    async def get_parking_endpoint(
+    async def get_location_endpoint(
         self, vin: str
     ) -> dict[str, Any] | None:  # pragma: no cover
         """Get where you have parked your car."""
@@ -62,18 +63,35 @@ class Api:
         return await self.controller.request(
             method="GET",
             base_url=BASE_URL,
-            endpoint=f"/users/{self.uuid}/vehicles/{vin}/vehicleStatus",
+            endpoint="/v1/vehiclehealth/status",
+            headers={"VIN": vin}
         )
+
+    async def get_vehicle_electric_status_endpoint(self, vin: str) -> dict[str, Any] | None:
+        """Get information about the vehicle."""
+        return await self.controller.request(
+            method="GET",
+            base_url=BASE_URL,
+            endpoint="/v1/global/remote/electric/status",
+            headers={"VIN": vin}
+        )
+
+    async def get_telemetry_endpoint(self, vin: str) -> dict[str, Any] | None:
+        """Get information about the vehicle."""
+        return await self.controller.request(
+            method="GET",
+            base_url=BASE_URL,
+            endpoint="/v3/telemetry",
+            headers={"VIN": vin}
+        )
+
+
 
     async def get_vehicle_status_legacy_endpoint(
         self, vin: str
     ) -> dict[str, Any] | None:
         """Get information about the vehicle."""
-        return await self.controller.request(
-            method="GET",
-            base_url=BASE_URL,
-            endpoint=f"/vehicles/{vin}/remoteControl/status",
-        )
+        raise NotImplemented("Endpoint no longer supported")
 
     async def get_driving_statistics_endpoint(
         self, vin: str, from_date: str, interval: str | None = None
